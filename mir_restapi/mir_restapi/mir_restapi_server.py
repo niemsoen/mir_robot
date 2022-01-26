@@ -86,7 +86,7 @@ class MirRestAPIServer(Node):
         # Request
         if self.api_handle.isConnected(print=False):
             # produces an unavoidable connection timeout
-            response.message = service_fct()
+            response.message = str(service_fct())
             if "Error" in response.message:
                 response.success = False
             else:
