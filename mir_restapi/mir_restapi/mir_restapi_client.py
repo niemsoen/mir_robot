@@ -18,8 +18,7 @@ class MirRestAPIClient(Node):
             Trigger,
             'mir_100_getStatus')
     
-    def callService(self, client):
-        self.get_logger().info("calling time set service")
+    def call_trigger_service(self, client):
         req = Trigger.Request()
         future = client.call_async(req)
         rclpy.spin_until_future_complete(self, future, timeout_sec=60)
@@ -35,10 +34,10 @@ class MirRestAPIClient(Node):
                 self.get_logger().error(res.message)
 
     def syncTime(self):
-        self.callService(self.restAPI_setTime)
+        self.call_trigger_service(self.restAPI_setTime)
     
     def getStatus(self):
-        self.callService(self.restAPI_getStatus)
+        self.call_trigger_service(self.restAPI_getStatus)
 
 
 

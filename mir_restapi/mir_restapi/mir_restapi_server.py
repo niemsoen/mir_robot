@@ -43,7 +43,7 @@ class MirRestAPIServer(Node):
                 self.hostname = param.value
         self.setup_api_handle()
         return SetParametersResult(successful=True)
-        
+    
     def create_services(self):
         self.restAPI_setTime = self.create_service(
             Trigger,
@@ -99,11 +99,12 @@ class MirRestAPIServer(Node):
         return response
 
     def set_time_callback(self, request, response):
-        self.get_logger().info('Attempting to setTime through REST API...')
+        self.get_logger().info('Syncing host time with REST API...')
         response = self.call_restapi_function(self.api_handle.syncTime, request, response)
         return response
 
-    def get_status_callback(self, request, response):        
+    def get_status_callback(self, request, response):
+        self.get_logger().info('Getting status from REST API...')
         response = self.call_restapi_function(self.api_handle.getStatus, request, response)
         return response
 
