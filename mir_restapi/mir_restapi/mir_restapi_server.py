@@ -168,10 +168,10 @@ class MirRestAPIServer(Node):
             STATE_ID_EMERGENCY = 10
             if state_id == STATE_ID_EMERGENCY:
                 response.message = str(True)
-                self.get_logger().info("Emergency Halt")
+                self.get_logger().debug("Emergency Halt")
             else:
                 response.message = str(False)
-                # self.get_logger().info("no emergency halt")
+                self.get_logger().debug("no emergency halt")
         return response
     
     def get_missions_callback(self, request, response):

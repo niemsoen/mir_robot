@@ -443,12 +443,14 @@ class MiR100BridgeNode(Node):
                         msg = Bool()
                         msg.data = True
                         emergency_pub.publish(msg)
+                        self.get_logger().info('Emergency Halt triggered')
                     emergency = True
                 else:
                     if emergency:
                         msg = Bool()
                         msg.data = True
                         emergency_pub.publish(msg)
+                        self.get_logger().info('Emergency Halt released')
                     emergency = False
 
 
