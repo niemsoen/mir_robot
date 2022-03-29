@@ -429,6 +429,7 @@ class MiR100BridgeNode(Node):
         last_check = time.time()
         emergency = False
         while True:
+            rclpy.spin_once(self)
             if time.time() - last_check < 1:
                 continue
             last_check = time.time()
