@@ -17,9 +17,10 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable, OpaqueFunction, SetLaunchConfiguration
+from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable, OpaqueFunction, SetLaunchConfiguration, RegisterEventHandler, LogInfo
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.event_handlers import OnProcessStart
 from launch_ros.actions import LoadComposableNodes
 from launch_ros.actions import Node
 from launch_ros.descriptions import ComposableNode
@@ -132,7 +133,7 @@ def generate_launch_description():
             pass
         return [SetLaunchConfiguration('cmd_vel_w_prefix', topic)]
 
-    load_nodes = GroupAction(
+    nodes_dep_on_lifecycle_manager = GroupAction(
         condition=IfCondition(PythonExpression(['not ', use_composition])),
         actions=[
             Node(
@@ -204,18 +205,31 @@ def generate_launch_description():
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
                 remappings=remappings +
-                        [('cmd_vel', command_topic), ('cmd_vel_smoothed', 'cmd_vel')]),
-            Node(
-                package='nav2_lifecycle_manager',
-                executable='lifecycle_manager',
-                name='lifecycle_manager_navigation',
-                output='screen',
-                arguments=['--ros-args', '--log-level', log_level],
-                parameters=[{'use_sim_time': use_sim_time},
-                            {'autostart': autostart},
-                            {'node_names': lifecycle_nodes}]),
+                        [('cmd_vel', command_topic), ('cmd_vel_smoothed', 'cmd_vel')])
         ]
     )
+
+    lifecycle_manager_uncomposed = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_navigation',
+        output='screen',
+        condition=IfCondition(PythonExpression(['not ', use_composition])),
+        arguments=['--ros-args', '--log-level', log_level],
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'autostart': autostart},
+                    {'node_names': lifecycle_nodes}])
+
+    load_nodes_after_lifecycle_manager_uncomposed = RegisterEventHandler(
+        OnProcessStart(
+            target_action=lifecycle_manager_uncomposed,
+            on_start=[LogInfo(msg="lifecycle manager started, now starting other nodes"), 
+                      nodes_dep_on_lifecycle_manager]
+        ),
+        condition=IfCondition(PythonExpression(['not ', use_composition]))
+    )
+
+    # composed
 
     load_composable_nodes = LoadComposableNodes(
         condition=IfCondition(use_composition),
@@ -294,7 +308,10 @@ def generate_launch_description():
     ld.add_action(declare_bt_nav_through_cmd)
     ld.add_action(OpaqueFunction(function=add_prefix_to_cmd_vel))
     # Add the actions to launch all of the navigation nodes
-    ld.add_action(load_nodes)
+    # Option A: uncomposed
+    ld.add_action(lifecycle_manager_uncomposed)
+    ld.add_action(load_nodes_after_lifecycle_manager_uncomposed)
+    # Option B: composed
     ld.add_action(load_composable_nodes)
 
     return ld
