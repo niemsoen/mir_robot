@@ -18,8 +18,8 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable, OpaqueFunction, SetLaunchConfiguration
-from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.conditions import UnlessCondition, IfCondition
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import LoadComposableNodes
 from launch_ros.actions import Node
 from launch_ros.descriptions import ComposableNode
@@ -39,6 +39,7 @@ def generate_launch_description():
     container_name_full = (namespace, '/', container_name)
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
+    run_controller_remote = LaunchConfiguration('run_controller_remote')
     default_nav_to_pose_bt_xml = LaunchConfiguration('default_nav_to_pose_bt_xml')
     default_nav_through_pose_bt_xml = LaunchConfiguration('default_nav_through_pose_bt_xml')
 
@@ -122,6 +123,11 @@ def generate_launch_description():
 
     declare_bt_nav_through_cmd = DeclareLaunchArgument(
         'default_nav_through_pose_bt_xml', default_value='')
+    
+    declare_controller_remote = DeclareLaunchArgument(
+        'run_controller_remote',
+        default_value='False',
+        description='If true, the controllers are not launched by this file, so that they can be executed in another process')
 
     def add_prefix_to_cmd_vel(context):
         topic = context.launch_configurations['cmd_vel_topic']
@@ -133,17 +139,8 @@ def generate_launch_description():
         return [SetLaunchConfiguration('cmd_vel_w_prefix', topic)]
 
     load_nodes = GroupAction(
-        condition=IfCondition(PythonExpression(['not ', use_composition])),
+        condition=UnlessCondition(use_composition),
         actions=[
-            Node(
-                package='nav2_controller',
-                executable='controller_server',
-                output='screen',
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings + [('cmd_vel', command_topic)]),
             Node(
                 package='nav2_smoother',
                 executable='smoother_server',
@@ -195,17 +192,6 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 remappings=remappings),
             Node(
-                package='nav2_velocity_smoother',
-                executable='velocity_smoother',
-                name='velocity_smoother',
-                output='screen',
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings +
-                        [('cmd_vel', command_topic), ('cmd_vel_smoothed', 'cmd_vel')]),
-            Node(
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',
                 name='lifecycle_manager_navigation',
@@ -214,8 +200,34 @@ def generate_launch_description():
                 parameters=[{'use_sim_time': use_sim_time},
                             {'autostart': autostart},
                             {'node_names': lifecycle_nodes}]),
+            # controller nodes, which can be run on another machine
+            GroupAction(
+                condition=UnlessCondition(run_controller_remote),
+                actions=[
+                    Node(
+                        package='nav2_controller',
+                        executable='controller_server',
+                        output='screen',
+                        respawn=use_respawn,
+                        respawn_delay=2.0,
+                        parameters=[configured_params],
+                        arguments=['--ros-args', '--log-level', log_level],
+                        remappings=remappings + [('cmd_vel', command_topic)]),
+                    Node(
+                        package='nav2_velocity_smoother',
+                        executable='velocity_smoother',
+                        name='velocity_smoother',
+                        output='screen',
+                        respawn=use_respawn,
+                        respawn_delay=2.0,
+                        parameters=[configured_params],
+                        arguments=['--ros-args', '--log-level', log_level],
+                        remappings=remappings +
+                                [('cmd_vel', command_topic), ('cmd_vel_smoothed', 'cmd_vel')]),
+                ]
+            )
         ]
-    )
+    )    
 
     load_composable_nodes = LoadComposableNodes(
         condition=IfCondition(use_composition),
@@ -292,6 +304,7 @@ def generate_launch_description():
     ld.add_action(declare_cmd_vel_cmd)
     ld.add_action(declare_bt_nav_cmd)
     ld.add_action(declare_bt_nav_through_cmd)
+    ld.add_action(declare_controller_remote)
     ld.add_action(OpaqueFunction(function=add_prefix_to_cmd_vel))
     # Add the actions to launch all of the navigation nodes
     ld.add_action(load_nodes)
