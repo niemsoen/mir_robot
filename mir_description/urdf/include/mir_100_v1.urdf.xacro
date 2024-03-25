@@ -150,7 +150,7 @@
     <xacro:caster_wheel prefix="${prefix}" ns="${ns}" locationprefix="br" locationright="1" wheel_base_dx="${mir_100_back_caster_wheel_base_dx}"/>
 
     <joint name="${prefix}base_link_surface_joint" type="fixed">
-      <origin xyz="${mir_100_act_wheel_dx} 0 0.352" rpy="0 0 0" />
+      <origin xyz="${mir_100_act_wheel_dx} 0 0.354" rpy="0 0 0" />
       <parent link="${prefix}base_link" />
       <child link="${prefix}surface" />
       <axis xyz="0 0 1" />
