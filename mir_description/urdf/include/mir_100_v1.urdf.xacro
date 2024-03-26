@@ -158,6 +158,16 @@
 
     <link name="${prefix}surface"/>
 
+    <joint name="${prefix}surface_mount_joint" type="fixed">
+      <!-- distance between mount holes on mir100 surface is 620 x 410 mm -->
+      <origin xyz="0.310 0.205 0" rpy="0 0 0" />
+      <parent link="${prefix}surface" />
+      <child link="${prefix}surface_mount" />
+      <axis xyz="0 0 1" />
+    </joint>
+
+    <link name="${prefix}surface_mount"/>
+
     <xacro:mir_100_wheel_transmissions prefix="${prefix}"/>
 
     <xacro:p3d_base_controller prefix="${prefix}"/>
