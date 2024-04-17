@@ -47,15 +47,15 @@
   <xacro:property name="imu_stdev" value="0.00017" />
 
   <xacro:macro name="mir_100" params="prefix ns">
-    <link name="${prefix}base_footprint" />
+    <link name="${ns}${prefix}base_footprint" />
 
-    <joint name="${prefix}base_joint" type="fixed">
-      <parent link="${prefix}base_footprint" />
-      <child link="${prefix}base_link" />
+    <joint name="${ns}${prefix}base_joint" type="fixed">
+      <parent link="${ns}${prefix}base_footprint" />
+      <child link="${ns}${prefix}base_link" />
       <origin xyz="0 0 0" rpy="0 0 0" />
     </joint>
 
-    <link name="${prefix}base_link">
+    <link name="${ns}${prefix}base_link">
       <xacro:box_inertial mass="${mir_100_base_mass}" x="${mir_base_inertial_x_length}" y="${mir_base_inertial_y_length}" z="${mir_base_inertial_z_length}">
         <origin xyz="${mir_base_inertial_x + mir_100_act_wheel_dx} ${mir_base_inertial_y} ${mir_base_inertial_z}" rpy="0 0 0" />
       </xacro:box_inertial>
@@ -73,103 +73,103 @@
         </geometry>
       </collision>
     </link>
-    <gazebo reference="${prefix}base_link">
+    <gazebo reference="${ns}${prefix}base_link">
       <material>Gazebo/White</material>
     </gazebo>
 
     <!-- IMU -->
-    <joint name="${prefix}base_link_to_imu_joint" type="fixed">
-      <parent link="${prefix}base_link" />
-      <child link="${prefix}imu_link" />
+    <joint name="${ns}${prefix}base_link_to_imu_joint" type="fixed">
+      <parent link="${ns}${prefix}base_link" />
+      <child link="${ns}${prefix}imu_link" />
       <origin xyz="0.0 0.0 0.25" rpy="0 0 0" />  <!-- same as real MiR -->
     </joint>
 
-    <link name="${prefix}imu_link" />
+    <link name="${ns}${prefix}imu_link" />
 
-    <xacro:imu_gazebo link="${prefix}imu_link" imu_topic="${prefix}imu_data" update_rate="50.0" stdev="${imu_stdev}" />
+    <xacro:imu_gazebo link="${ns}${prefix}imu_link" imu_topic="${ns}${prefix}imu_data" update_rate="50.0" stdev="${imu_stdev}" />
 
     <!-- Create an alias for imu_link. This is necessary because the real MiR's
          TF has imu_link, but the imu_data topic is published in the imu_frame
          frame. -->
-    <joint name="${prefix}imu_link_to_imu_frame_joint" type="fixed">
-      <parent link="${prefix}imu_link" />
-      <child link="${prefix}imu_frame" />
+    <joint name="${ns}${prefix}imu_link_to_imu_frame_joint" type="fixed">
+      <parent link="${ns}${prefix}imu_link" />
+      <child link="${ns}${prefix}imu_frame" />
       <origin xyz="0 0 0" rpy="0 0 0" />
     </joint>
 
-    <link name="${prefix}imu_frame" />
+    <link name="${ns}${prefix}imu_frame" />
 
     <!-- Laser scanners -->
     <!-- virtual link for merged laserscan-->
-    <joint name="${prefix}base_link_to_virtual_laser_joint" type="fixed">
-      <parent link="${prefix}base_link" />
-      <child link="${prefix}virtual_laser_link" />
+    <joint name="${ns}${prefix}base_link_to_virtual_laser_joint" type="fixed">
+      <parent link="${ns}${prefix}base_link" />
+      <child link="${ns}${prefix}virtual_laser_link" />
       <origin xyz="0.0 0.0 0.25" rpy="0.0 0.0 0" />
     </joint>
-    <link name="${prefix}virtual_laser_link">
+    <link name="${ns}${prefix}virtual_laser_link">
     </link>
 
-    <joint name="${prefix}base_link_to_front_laser_joint" type="fixed">
-      <parent link="${prefix}base_link" />
-      <child link="${prefix}front_laser_link" />
+    <joint name="${ns}${prefix}base_link_to_front_laser_joint" type="fixed">
+      <parent link="${ns}${prefix}base_link" />
+      <child link="${ns}${prefix}front_laser_link" />
       <origin xyz="0.4288 0.2358 0.1914" rpy="0.0 0.0 ${0.25 * pi}" />  <!-- from visually matching up the meshes of the MiR and the laser scanner -->
     </joint>
-    <xacro:sick_s300 prefix="${prefix}" link="front_laser_link" topic="f_scan" />
+    <xacro:sick_s300 prefix="${ns}${prefix}" link="front_laser_link" topic="f_scan" />
 
-    <joint name="${prefix}base_link_to_back_laser_joint" type="fixed">
-      <parent link="${prefix}base_link" />
-      <child link="${prefix}back_laser_link" />
+    <joint name="${ns}${prefix}base_link_to_back_laser_joint" type="fixed">
+      <parent link="${ns}${prefix}base_link" />
+      <child link="${ns}${prefix}back_laser_link" />
       <origin xyz="-0.3548 -0.2352 0.1914" rpy="0.0 0.0 ${-0.75 * pi}" />  <!-- from visually matching up the meshes of the MiR and the laser scanner -->
     </joint>
 
-    <xacro:sick_s300 prefix="${prefix}" link="back_laser_link" topic="b_scan" />
+    <xacro:sick_s300 prefix="${ns}${prefix}" link="back_laser_link" topic="b_scan" />
 
     <!-- Ultrasound sensors -->
-    <joint name="${prefix}us_1_joint" type="fixed">   <!-- right ultrasound -->
-      <parent link="${prefix}base_link" />
-      <child link="${prefix}us_1_frame" />
+    <joint name="${ns}${prefix}us_1_joint" type="fixed">   <!-- right ultrasound -->
+      <parent link="${ns}${prefix}base_link" />
+      <child link="${ns}${prefix}us_1_frame" />
       <origin xyz="0.45 -0.12 0.16 " rpy="0 0 0" />  <!-- from visually matching to the mesh of the MiR -->
     </joint>
 
-    <link name="${prefix}us_1_frame" />
+    <link name="${ns}${prefix}us_1_frame" />
 
-    <joint name="${prefix}us_2_joint" type="fixed">   <!-- left ultrasound -->
-      <parent link="${prefix}base_link" />
-      <child link="${prefix}us_2_frame" />
+    <joint name="${ns}${prefix}us_2_joint" type="fixed">   <!-- left ultrasound -->
+      <parent link="${ns}${prefix}base_link" />
+      <child link="${ns}${prefix}us_2_frame" />
       <origin xyz="0.45 0.12 0.16 " rpy="0 0 0" />  <!-- from visually matching to the mesh of the MiR -->
     </joint>
 
-    <link name="${prefix}us_2_frame" />
+    <link name="${ns}${prefix}us_2_frame" />
 
     <!-- wheels -->
-    <xacro:actuated_wheel prefix="${prefix}" locationprefix="left" locationright="-1"/>
-    <xacro:actuated_wheel prefix="${prefix}" locationprefix="right" locationright="1"/>
-    <xacro:caster_wheel prefix="${prefix}" ns="${ns}" locationprefix="fl" locationright="-1" wheel_base_dx="${mir_100_front_caster_wheel_base_dx}"/>
-    <xacro:caster_wheel prefix="${prefix}" ns="${ns}" locationprefix="fr" locationright="1" wheel_base_dx="${mir_100_front_caster_wheel_base_dx}"/>
-    <xacro:caster_wheel prefix="${prefix}" ns="${ns}" locationprefix="bl" locationright="-1" wheel_base_dx="${mir_100_back_caster_wheel_base_dx}"/>
-    <xacro:caster_wheel prefix="${prefix}" ns="${ns}" locationprefix="br" locationright="1" wheel_base_dx="${mir_100_back_caster_wheel_base_dx}"/>
+    <xacro:actuated_wheel prefix="${ns}${prefix}" locationprefix="left" locationright="-1"/>
+    <xacro:actuated_wheel prefix="${ns}${prefix}" locationprefix="right" locationright="1"/>
+    <xacro:caster_wheel prefix="${ns}${prefix}" ns="${ns}" locationprefix="fl" locationright="-1" wheel_base_dx="${mir_100_front_caster_wheel_base_dx}"/>
+    <xacro:caster_wheel prefix="${ns}${prefix}" ns="${ns}" locationprefix="fr" locationright="1" wheel_base_dx="${mir_100_front_caster_wheel_base_dx}"/>
+    <xacro:caster_wheel prefix="${ns}${prefix}" ns="${ns}" locationprefix="bl" locationright="-1" wheel_base_dx="${mir_100_back_caster_wheel_base_dx}"/>
+    <xacro:caster_wheel prefix="${ns}${prefix}" ns="${ns}" locationprefix="br" locationright="1" wheel_base_dx="${mir_100_back_caster_wheel_base_dx}"/>
 
-    <joint name="${prefix}base_link_surface_joint" type="fixed">
+    <joint name="${ns}${prefix}base_link_surface_joint" type="fixed">
       <origin xyz="${mir_100_act_wheel_dx} 0 0.354" rpy="0 0 0" />
-      <parent link="${prefix}base_link" />
-      <child link="${prefix}surface" />
+      <parent link="${ns}${prefix}base_link" />
+      <child link="${ns}${prefix}surface" />
       <axis xyz="0 0 1" />
     </joint>
 
-    <link name="${prefix}surface"/>
+    <link name="${ns}${prefix}surface"/>
 
-    <joint name="${prefix}surface_mount_joint" type="fixed">
+    <joint name="${ns}${prefix}surface_mount_joint" type="fixed">
       <!-- distance between mount holes on mir100 surface is 620 x 410 mm -->
       <origin xyz="0.310 0.205 0" rpy="0 0 0" />
-      <parent link="${prefix}surface" />
-      <child link="${prefix}surface_mount" />
+      <parent link="${ns}${prefix}surface" />
+      <child link="${ns}${prefix}surface_mount" />
       <axis xyz="0 0 1" />
     </joint>
 
-    <link name="${prefix}surface_mount"/>
+    <link name="${ns}${prefix}surface_mount"/>
 
-    <xacro:mir_100_wheel_transmissions prefix="${prefix}"/>
+    <xacro:mir_100_wheel_transmissions prefix="${ns}${prefix}"/>
 
-    <xacro:p3d_base_controller prefix="${prefix}"/>
+    <xacro:p3d_base_controller prefix="${ns}${prefix}"/>
   </xacro:macro>
 </robot>
