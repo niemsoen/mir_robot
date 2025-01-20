@@ -18,9 +18,11 @@ class MirRestAPIServer(Node):
 
         # parameters: hostname, api_token
         self.declare_parameter('mir_hostname', "")
-        self.hostname = self.get_parameter('mir_hostname').get_parameter_value().string_value
+        self.hostname = self.get_parameter(
+            'mir_hostname').get_parameter_value().string_value
         self.declare_parameter('mir_restapi_auth', "")
-        self.auth = self.get_parameter('mir_restapi_auth').get_parameter_value().string_value
+        self.auth = self.get_parameter(
+            'mir_restapi_auth').get_parameter_value().string_value
         self.add_on_set_parameters_callback(self.parameters_callback)
 
         self.api_handle = None
@@ -153,22 +155,26 @@ class MirRestAPIServer(Node):
 
     def sync_time_callback(self, request, response):
         self.get_logger().info('Syncing host time with REST API...')
-        response = self.call_restapi_function(self.api_handle.sync_time, request, response)
+        response = self.call_restapi_function(
+            self.api_handle.sync_time, request, response)
         return response
 
     def get_status_callback(self, request, response):
         self.get_logger().info('Getting status from REST API...')
-        response = self.call_restapi_function(self.api_handle.get_status, request, response)
+        response = self.call_restapi_function(
+            self.api_handle.get_status, request, response)
         return response
 
     def get_sounds_callback(self, request, response):
         self.get_logger().info('Getting sounds from REST API...')
-        response = self.call_restapi_function(self.api_handle.get_sounds, request, response)
+        response = self.call_restapi_function(
+            self.api_handle.get_sounds, request, response)
         return response
 
     def is_emergency_halt_callback(self, request, response):
         self.get_logger().info('Checking REST API for emergency halt...')
-        response = self.call_restapi_function(self.api_handle.get_state_id, request, response)
+        response = self.call_restapi_function(
+            self.api_handle.get_state_id, request, response)
 
         if response.success:
             state_id = int(response.message)
@@ -184,11 +190,12 @@ class MirRestAPIServer(Node):
 
     def get_missions_callback(self, request, response):
         self.get_logger().info('Getting missions from REST API...')
-        response = self.call_restapi_function(self.api_handle.get_missions, request, response)
+        response = self.call_restapi_function(
+            self.api_handle.get_missions, request, response)
         return response
 
-    def honk_callback(self,request,response):
-        
+    def honk_callback(self, request, response):
+
         req = ExecMission.Request()
         req.mission_name = "honk"
         resp = ExecMission.Response()
@@ -201,44 +208,49 @@ class MirRestAPIServer(Node):
 
         mission_name = request.mission_name
 
-        queue_success, mission_queue_id = self.api_handle.add_mission_to_queue(mission_name)
-        if not queue_success:
-            response.message = "Execution Mission '{}' failed due to mission queue error".format(mission_name)
-            self.get_logger().error(response.message)
-            response.success = False
-            return response
-        self.get_logger().info("Put mission {} into queue with mission_queue_id={}".format(mission_name,
-            mission_queue_id))
-
         emerg_response = self.is_emergency_halt_callback(request, response)
         if emerg_response.message == str(True):
             response.message = "Can't execute mission, emergency halt"
             self.get_logger().error(response.message)
             response.success = False
-        else:
-            response.message = "Executing mission '{}'".format(mission_name)
-            self.get_logger().info(response.message)
-            STATE_ID_RUN_MISSION = 3
-            STATE_ID_PAUSE = 4
+            return response
 
-            self.api_handle.set_state_id(STATE_ID_RUN_MISSION)
+        queue_success, mission_queue_id = self.api_handle.add_mission_to_queue(
+            mission_name)
+        if not queue_success:
+            response.message = "Execution Mission '{}' failed due to mission queue error".format(
+                mission_name)
+            self.get_logger().error(response.message)
+            response.success = False
+            return response
+        self.get_logger().info("Put mission {} into queue with mission_queue_id={}".format(mission_name,
+                                                                                           mission_queue_id))
 
-            while not self.api_handle.is_mission_done(mission_queue_id):
-                time.sleep(1)
+        response.message = "Executing mission '{}'".format(mission_name)
+        self.get_logger().info(response.message)
+        STATE_ID_RUN_MISSION = 3
+        STATE_ID_PAUSE = 4
 
-            self.api_handle.set_state_id(STATE_ID_PAUSE)
-            self.api_handle.http.__del__()
-            response.success = True
+        self.api_handle.set_state_id(STATE_ID_RUN_MISSION)
+
+        while not self.api_handle.is_mission_done(mission_queue_id):
+            time.sleep(1)
+
+        self.api_handle.set_state_id(STATE_ID_PAUSE)
+        self.api_handle.http.__del__()
+        response.success = True
         return response
 
     def get_system_info_callback(self, request, response):
         self.get_logger().info('Getting system info from REST API...')
-        response = self.call_restapi_function(self.api_handle.get_system_info, request, response)
+        response = self.call_restapi_function(
+            self.api_handle.get_system_info, request, response)
         return response
 
     def get_settings_callback(self, request, response):
         self.get_logger().info('Getting settings from REST API...')
-        response = self.call_restapi_function(self.api_handle.get_all_settings, request, response)
+        response = self.call_restapi_function(
+            self.api_handle.get_all_settings, request, response)
         return response
 
 
